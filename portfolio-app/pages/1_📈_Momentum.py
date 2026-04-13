@@ -206,7 +206,8 @@ fig_tbl = go.Figure(go.Table(
         format=[None] + [".2f"] * len(disp.columns),
     ),
 ))
-fig_tbl.update_layout(**CHART, height=160, margin=dict(l=0, r=0, t=0, b=0))
+fig_tbl.update_layout(**CHART, height=160)
+fig_tbl.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 st.plotly_chart(fig_tbl, width="stretch")
 
 with st.sidebar:
