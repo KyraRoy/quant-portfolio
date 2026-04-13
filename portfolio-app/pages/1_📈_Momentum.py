@@ -5,7 +5,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import yfinance as yf
 
 from core.style import apply_style, page_header, section, kpi_row, CHART, C
 
@@ -27,14 +26,16 @@ def load():
     return nav, ret, perf
 
 @st.cache_data
-def load_spy(start, end):
-    raw = yf.download("SPY", start=start, end=end, auto_adjust=True, progress=False)
-    p   = raw["Close"].squeeze()
-    return (p / p.iloc[0]).rename("SPY")
+def load_spy():
+    # SPY is included in stock_prices.csv — no live download needed
+    prices = pd.read_csv(f"{DATA}/stock_prices.csv", index_col=0, parse_dates=True)
+    p = prices["SPY"].dropna()
+    return p
 
 nav, ret, perf = load()
-spy = load_spy(nav.index[0].strftime("%Y-%m-%d"), nav.index[-1].strftime("%Y-%m-%d"))
-spy = spy.reindex(nav.index).ffill()
+_spy_raw = load_spy()
+# Normalize SPY to 1.0 at strategy start, aligned to NAV index
+spy = (_spy_raw / _spy_raw.reindex(nav.index).dropna().iloc[0]).reindex(nav.index).ffill().rename("SPY")
 
 long_p  = perf.loc["long"]
 ls_p    = perf.loc["long_short"]

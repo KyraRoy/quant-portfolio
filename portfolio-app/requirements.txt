@@ -6,3 +6,4 @@ streamlit
 plotly
 requests
 lxml
+yfinance
