@@ -13,9 +13,7 @@ import core.spread_model as sm_mod
 st.set_page_config(page_title="Pairs Trading", page_icon="⚖️", layout="wide")
 apply_style()
 
-DATA     = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-BASE     = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-PRICES_PATH = os.path.join(BASE, "momentum-strategy", "data", "sp500_prices.csv")
+DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
 
 @st.cache_data
 def load():
@@ -23,7 +21,8 @@ def load():
     pair_ret   = pd.read_csv(f"{DATA}/pair_returns.csv",  index_col=0, parse_dates=True)
     port_nav   = pd.read_csv(f"{DATA}/pairs_nav.csv",     index_col=0, parse_dates=True)
     trade_log  = pd.read_csv(f"{DATA}/trade_log.csv")
-    prices     = pd.read_csv(PRICES_PATH, index_col=0, parse_dates=True)
+    # pairs_prices.csv contains only the 21 tickers used across all 12 pairs (~300 KB)
+    prices     = pd.read_csv(f"{DATA}/pairs_prices.csv",  index_col=0, parse_dates=True)
     return top_pairs, pair_ret, port_nav, trade_log, prices
 
 top_pairs, pair_ret, port_nav, trade_log, prices = load()
