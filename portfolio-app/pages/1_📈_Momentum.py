@@ -174,12 +174,40 @@ st.plotly_chart(fig_rs, width="stretch")
 section("Full Performance Summary")
 disp = perf.copy()
 disp.index = ["Long-Only", "Short-Only", "Long-Short"]
-st.dataframe(
-    disp.style.format({c: "{:.2f}" for c in disp.columns})
-             .background_gradient(subset=["CAGR (%)","Sharpe","Calmar"], cmap="RdYlGn")
-             .background_gradient(subset=["Max DD (%)"], cmap="RdYlGn_r"),
-    width="stretch",
-)
+
+# Render as a Plotly table to avoid any matplotlib dependency
+col_labels = ["Strategy"] + disp.columns.tolist()
+cell_vals   = [disp.index.tolist()] + [disp[c].round(2).tolist() for c in disp.columns]
+
+# Color CAGR and Sharpe cells green/red by sign
+def cell_colors(col, vals):
+    if col in ("CAGR (%)", "Sharpe", "Calmar"):
+        return [C["green"] if v > 0 else C["red"] for v in vals]
+    if col == "Max DD (%)":
+        return [C["red"] if v < 0 else C["muted"] for v in vals]
+    return [C["muted"]] * len(vals)
+
+fill_colors = [["#1E293B"] * len(disp.index)]
+for col in disp.columns:
+    fill_colors.append(cell_colors(col, disp[col].tolist()))
+
+fig_tbl = go.Figure(go.Table(
+    header=dict(
+        values=[f"<b>{c}</b>" for c in col_labels],
+        fill_color="#0F172A", font=dict(color="#F1F5F9", size=12),
+        align="left", line_color="#334155", height=36,
+    ),
+    cells=dict(
+        values=cell_vals,
+        fill_color=fill_colors,
+        font=dict(color="#F1F5F9", size=12),
+        align=["left"] + ["right"] * len(disp.columns),
+        line_color="#334155", height=32,
+        format=[None] + [".2f"] * len(disp.columns),
+    ),
+))
+fig_tbl.update_layout(**CHART, height=160, margin=dict(l=0, r=0, t=0, b=0))
+st.plotly_chart(fig_tbl, width="stretch")
 
 with st.sidebar:
     st.markdown("### Strategy Parameters")

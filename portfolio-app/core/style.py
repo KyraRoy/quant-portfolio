@@ -127,8 +127,8 @@ div[data-testid="stMetricLabel"] { color: #64748B !important; font-size: 0.78rem
 
 
 def apply_style():
-    """Call once at the top of every page."""
-    st.markdown(CSS, unsafe_allow_html=True)
+    """Inject global CSS using st.html() so it never renders as a visible block."""
+    st.html(CSS)
 
 
 def page_header(title: str, subtitle: str = ""):
