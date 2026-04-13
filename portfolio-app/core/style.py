@@ -133,32 +133,52 @@ def apply_style():
 
 def page_header(title: str, subtitle: str = ""):
     """Render a gradient page title + subtitle."""
-    st.markdown(f'<div class="page-title">{title}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="font-size:2.2rem;font-weight:800;line-height:1.1;margin-bottom:0.2rem;'
+        f'background:linear-gradient(135deg,#818CF8,#C084FC);'
+        f'-webkit-background-clip:text;-webkit-text-fill-color:transparent;'
+        f'background-clip:text;">{title}</div>',
+        unsafe_allow_html=True,
+    )
     if subtitle:
-        st.markdown(f'<div class="page-subtitle">{subtitle}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="color:#64748B;font-size:0.95rem;margin-bottom:1.4rem;">{subtitle}</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def section(label: str, caption: str = ""):
-    st.markdown(f'<div class="section">{label}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div style="font-size:1.1rem;font-weight:700;color:#E2E8F0;margin:1.4rem 0 0.3rem 0;">'
+        f'{label}</div>',
+        unsafe_allow_html=True,
+    )
     if caption:
-        st.markdown(f'<div class="caption">{caption}</div>', unsafe_allow_html=True)
+        st.markdown(
+            f'<div style="font-size:0.8rem;color:#64748B;margin-bottom:0.7rem;">{caption}</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def kpi_row(metrics: list[dict]):
     """
-    Render a row of colored KPI cards.
+    Render a row of colored KPI cards using st.columns so each card
+    gets its own markdown call — avoids multi-div parsing issues.
     Each dict: {label, value, delta="", color=C["primary"]}
     """
-    cards_html = '<div class="kpi-grid">'
-    for m in metrics:
-        color   = m.get("color", C["primary"])
-        delta   = m.get("delta", "")
-        delta_html = f'<div class="kpi-delta" style="color:{color}">{delta}</div>' if delta else ""
-        cards_html += f"""
-        <div class="kpi" style="border-color:{color}">
-            <div class="kpi-value">{m["value"]}</div>
-            <div class="kpi-label">{m["label"]}</div>
-            {delta_html}
-        </div>"""
-    cards_html += "</div>"
-    st.markdown(cards_html, unsafe_allow_html=True)
+    cols = st.columns(len(metrics))
+    for col, m in zip(cols, metrics):
+        color = m.get("color", C["primary"])
+        delta = m.get("delta", "")
+        delta_html = (
+            f'<div style="font-size:0.78rem;margin-top:6px;color:{color};">{delta}</div>'
+            if delta else ""
+        )
+        col.markdown(f"""
+<div style="background:#1E293B;border-radius:12px;padding:16px 20px;
+            border-left:3px solid {color};min-height:90px;">
+  <div style="font-size:1.6rem;font-weight:700;color:#F1F5F9;line-height:1.1;">{m['value']}</div>
+  <div style="font-size:0.7rem;color:#64748B;text-transform:uppercase;
+              letter-spacing:0.09em;margin-top:5px;">{m['label']}</div>
+  {delta_html}
+</div>""", unsafe_allow_html=True)

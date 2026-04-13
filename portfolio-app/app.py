@@ -11,7 +11,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-from core.style import apply_style, CSS, C
+from core.style import apply_style, CSS, C, section
 apply_style()
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
@@ -47,9 +47,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ── Project cards ──────────────────────────────────────────────────────────────
-st.markdown('<div class="section">Projects</div>', unsafe_allow_html=True)
-st.markdown('<div class="caption">Use the sidebar to open any project dashboard.</div>',
-            unsafe_allow_html=True)
+section("Projects", "Use the sidebar to open any project dashboard.")
 
 PROJECTS = [
     {

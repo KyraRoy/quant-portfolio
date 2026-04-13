@@ -252,7 +252,7 @@ with c3:
 
 with c4:
     stats_df = sim.horizon_statistics(primary)
-    st.markdown('<div class="section">Probability Table by Horizon</div>', unsafe_allow_html=True)
+    section("Probability Table by Horizon")
     st.dataframe(stats_df.style.format({
         "Median NAV": "{:.3f}", "5th Pct": "{:.3f}", "95th Pct": "{:.3f}",
         "P(loss)": "{:.1f}%", "P(+20%)": "{:.1f}%", "P(double)": "{:.1f}%",
@@ -266,6 +266,5 @@ with c4:
             f"P(>{target_mult:.1f}×)": f"{sim.prob_reach_target(r,target_mult)*100:.1f}%",
             "VaR 95%":      f"{sim.simulated_var(r,.95)*100:.1f}%",
         } for m, r in sim_results.items()}
-        st.markdown('<div class="section" style="margin-top:1rem;">GBM vs Bootstrap</div>',
-                    unsafe_allow_html=True)
+        section("GBM vs Bootstrap")
         st.dataframe(pd.DataFrame(comp), width="stretch")
