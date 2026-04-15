@@ -9,18 +9,14 @@ import streamlit as st
 from core.style import apply_style, page_header, section, kpi_row, CHART, C
 import core.simulator as sim
 import core.optimizer as opt
+import core.live_data as ld
 
 st.set_page_config(page_title="Monte Carlo Simulator", page_icon="🎲", layout="wide")
 apply_style()
 
-DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-
-@st.cache_data
-def load_returns():
-    df = pd.read_csv(f"{DATA}/stock_log_returns.csv", index_col=0, parse_dates=True)
-    return df.drop(columns=["SPY"], errors="ignore")
-
-all_returns = load_returns()
+# Live log returns for the 20-stock portfolio (updates daily via yfinance).
+# SPY is excluded from the investable universe — kept only as a benchmark.
+all_returns = ld.get_portfolio_log_returns().drop(columns=["SPY"], errors="ignore")
 all_tickers = all_returns.columns.tolist()
 
 SECTOR_COLORS = {

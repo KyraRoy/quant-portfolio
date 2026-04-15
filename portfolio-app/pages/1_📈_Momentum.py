@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from core.style import apply_style, page_header, section, kpi_row, CHART, C
+import core.live_data as ld
 
 st.set_page_config(page_title="Momentum Strategy", page_icon="📈", layout="wide")
 apply_style()
@@ -209,6 +210,108 @@ fig_tbl = go.Figure(go.Table(
 fig_tbl.update_layout(**CHART, height=160)
 fig_tbl.update_layout(margin=dict(l=0, r=0, t=0, b=0))
 st.plotly_chart(fig_tbl, width="stretch")
+
+# ── Live Momentum Leaderboard ──────────────────────────────────────────────────
+st.markdown("<hr class='hdivider'>", unsafe_allow_html=True)
+
+section(
+    "Today's Momentum Signal — Live Leaderboard",
+    "JT 12-1 month signal · Current S&P 500 universe · Updates daily. "
+    "Click the button to load live data (~15–30 s on first run; cached for the rest of the day).",
+)
+
+if st.button("Load Today's Momentum Signal", type="primary"):
+    with st.spinner("Downloading S&P 500 prices — this runs once per day…"):
+        live_prices = ld.get_momentum_universe_prices(lookback_months=14)
+
+    if live_prices is None or live_prices.empty:
+        st.warning(
+            "Could not download live data from yfinance. "
+            "Check your internet connection or try again later."
+        )
+    else:
+        scores = ld.compute_current_momentum_signal(live_prices, lookback=12, skip=1)
+
+        if scores.empty:
+            st.warning("Not enough monthly data to compute signal (need ≥ 14 months).")
+        else:
+            # Signal date = last month-end in the formation window
+            signal_date = (pd.Timestamp.today() - pd.offsets.MonthEnd(1)).strftime("%B %Y")
+            n_universe  = len(scores)
+            decile_n    = max(1, n_universe // 10)
+
+            top10  = scores.head(10)
+            bot10  = scores.tail(10).sort_values(ascending=True)
+
+            # Badge
+            st.markdown(
+                f'<div style="margin-bottom:1rem;">'
+                f'Signal month: <b style="color:#F1F5F9;">{signal_date}</b>'
+                f'&nbsp;&nbsp;{ld.last_updated_badge()}'
+                f'&nbsp;&nbsp;<span style="color:#64748B;font-size:0.82rem;">'
+                f'Universe: {n_universe} stocks · Top/bottom decile ≈ {decile_n} stocks</span>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
+            c_long, c_short = st.columns(2, gap="large")
+
+            with c_long:
+                section("Top Decile (Long)", "Highest trailing 12-month momentum")
+                fig_top = go.Figure(go.Bar(
+                    x=top10.values,
+                    y=top10.index.tolist(),
+                    orientation="h",
+                    marker_color=C["green"],
+                    marker_line_color="rgba(0,0,0,0)",
+                    text=[f"{v:.3f}" for v in top10.values],
+                    textposition="outside",
+                    textfont=dict(color="#F1F5F9", size=11),
+                ))
+                fig_top.update_layout(
+                    **CHART,
+                    height=340,
+                    title="Top 10 by Momentum Score (percentile rank)",
+                    yaxis=dict(**CHART["yaxis"], autorange="reversed"),
+                )
+                fig_top.update_xaxes(range=[0.85, 1.02], title_text="Percentile rank")
+                st.plotly_chart(fig_top, width="stretch")
+
+            with c_short:
+                section("Bottom Decile (Short)", "Lowest trailing 12-month momentum")
+                fig_bot = go.Figure(go.Bar(
+                    x=bot10.values,
+                    y=bot10.index.tolist(),
+                    orientation="h",
+                    marker_color=C["red"],
+                    marker_line_color="rgba(0,0,0,0)",
+                    text=[f"{v:.3f}" for v in bot10.values],
+                    textposition="outside",
+                    textfont=dict(color="#F1F5F9", size=11),
+                ))
+                fig_bot.update_layout(
+                    **CHART,
+                    height=340,
+                    title="Bottom 10 by Momentum Score (percentile rank)",
+                    yaxis=dict(**CHART["yaxis"], autorange="reversed"),
+                )
+                fig_bot.update_xaxes(range=[0.0, 0.18], title_text="Percentile rank")
+                st.plotly_chart(fig_bot, width="stretch")
+
+            # Full ranked table in expander
+            with st.expander("Full ranked leaderboard — all tickers"):
+                df_scores = pd.DataFrame({
+                    "Ticker":          scores.index,
+                    "Momentum Score":  scores.values.round(4),
+                    "Decile":          pd.cut(
+                        scores.values,
+                        bins=[0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.0],
+                        labels=list(range(1, 11)),
+                        include_lowest=True,
+                    ),
+                }).reset_index(drop=True)
+                df_scores.index += 1
+                st.dataframe(df_scores, width="stretch")
 
 with st.sidebar:
     st.markdown("### Strategy Parameters")

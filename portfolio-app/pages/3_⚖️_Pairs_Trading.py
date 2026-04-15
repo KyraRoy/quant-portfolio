@@ -9,6 +9,7 @@ import streamlit as st
 
 from core.style import apply_style, page_header, section, kpi_row, CHART, C
 import core.spread_model as sm_mod
+import core.live_data as ld
 
 st.set_page_config(page_title="Pairs Trading", page_icon="⚖️", layout="wide")
 apply_style()
@@ -50,6 +51,44 @@ with st.sidebar:
 | **Coint p-val** | {row['coint_pval']:.5f} |
 | **Correlation** | {row['correlation']:.4f} |
 """)
+
+    # ── Live z-score for the selected pair ─────────────────────────────────
+    st.divider()
+    st.markdown("### Live Z-Score")
+    live_pair_prices = ld.get_pair_live_prices(a, b, lookback_years=3)
+
+    if live_pair_prices is not None and len(live_pair_prices) >= sm_mod.Z_WINDOW + 5:
+        live_ps = sm_mod.build_pair_spread(a, b, live_pair_prices, hedge_ratio=hr)
+        current_z = float(live_ps.z_score.dropna().iloc[-1])
+        z_date    = live_ps.z_score.dropna().index[-1].strftime("%Y-%m-%d")
+
+        # Colour the z-score by signal zone
+        if abs(current_z) >= entry_z:
+            z_color = C["red"] if current_z > 0 else C["green"]
+            z_label = "SHORT SIGNAL" if current_z > 0 else "LONG SIGNAL"
+        elif abs(current_z) <= exit_z:
+            z_color = C["muted"]
+            z_label = "FLAT ZONE"
+        else:
+            z_color = C["amber"]
+            z_label = "IN RANGE"
+
+        st.markdown(
+            f'<div style="background:#1E293B;border-radius:12px;padding:14px 16px;'
+            f'border-left:3px solid {z_color};margin-bottom:8px;">'
+            f'<div style="font-size:2rem;font-weight:800;color:{z_color};line-height:1;">'
+            f'{current_z:+.3f}</div>'
+            f'<div style="font-size:0.7rem;color:#64748B;text-transform:uppercase;'
+            f'letter-spacing:0.09em;margin-top:4px;">Current Z-Score</div>'
+            f'<div style="font-size:0.75rem;color:{z_color};font-weight:600;margin-top:6px;">'
+            f'{z_label}</div>'
+            f'<div style="font-size:0.7rem;color:#475569;margin-top:4px;">{ld.last_updated_badge()}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        st.caption(f"As of {z_date} · Rolling {sm_mod.Z_WINDOW}-day z-score")
+    else:
+        st.caption("Live z-score unavailable (yfinance could not fetch data).")
 
 @st.cache_data
 def get_spread(a, b, hr, entry_z, exit_z, stop_z):

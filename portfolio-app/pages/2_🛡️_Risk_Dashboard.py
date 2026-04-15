@@ -9,19 +9,15 @@ import streamlit as st
 
 from core.style import apply_style, page_header, section, kpi_row, CHART, C
 import core.risk_metrics as rm
+import core.live_data as ld
 
 st.set_page_config(page_title="Risk Dashboard", page_icon="🛡️", layout="wide")
 apply_style()
 
-DATA = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data")
-
-@st.cache_data
-def load():
-    prices  = pd.read_csv(f"{DATA}/stock_prices.csv",      index_col=0, parse_dates=True)
-    returns = pd.read_csv(f"{DATA}/stock_log_returns.csv", index_col=0, parse_dates=True)
-    return prices, returns
-
-prices_all, returns_all = load()
+# Live prices + log returns for the 20-stock portfolio (updates daily via yfinance;
+# falls back to the static CSV if the download fails).
+prices_all  = ld.get_portfolio_prices()
+returns_all = ld.get_portfolio_log_returns()
 all_tickers = [t for t in returns_all.columns if t != "SPY"]
 
 SECTOR = {
@@ -61,9 +57,10 @@ so      = rm.sortino_ratio(port)
 mdd     = rm.max_drawdown(port)
 beta_v  = rm.beta(port, spy_ret) if spy_ret is not None else float("nan")
 
+end_date = returns_all.index[-1].strftime("%Y-%m-%d")
 page_header("Risk Dashboard",
             f"Equal-weight portfolio · {len(selected)} holdings · "
-            f"{int(confidence*100)}% VaR confidence · 2018–2024")
+            f"{int(confidence*100)}% VaR confidence · 2018–{end_date}")
 
 kpi_row([
     {"label": f"VaR {int(confidence*100)}% (daily)", "value": f"{var_h*100:.2f}%", "color": C["amber"]},

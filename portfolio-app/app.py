@@ -3,6 +3,7 @@ app.py — Home page of the Quantitative Finance Portfolio
 """
 
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(
     page_title="Quant Portfolio · Kyra Roy",
@@ -13,6 +14,8 @@ st.set_page_config(
 
 from core.style import apply_style, CSS, C, section
 apply_style()
+
+_current_year = pd.Timestamp.today().year
 
 # ── Hero ───────────────────────────────────────────────────────────────────────
 st.markdown("""
@@ -29,8 +32,8 @@ st.markdown("""
   </div>
   <div style="font-size:1.1rem; color:#94A3B8; max-width:680px; line-height:1.6;">
     End-to-end implementations of core quantitative finance strategies —
-    each with a live interactive dashboard. Built in Python using real
-    market data from 2018–2024.
+    each with a live interactive dashboard. Built in Python using live
+    market data from 2018–present.
   </div>
   <div style="margin-top:1rem;">
     <span class="tag">Python</span>
@@ -140,11 +143,11 @@ st.markdown("<hr class='hdivider'>", unsafe_allow_html=True)
 
 stat_cols = st.columns(5)
 stats = [
-    ("484",       "S&P 500 stocks"),
-    ("1,760",     "Trading days"),
-    ("7 years",   "Data: 2018–2024"),
-    ("5",         "Live dashboards"),
-    ("10,000+",   "MC simulations"),
+    ("484",                                 "S&P 500 stocks"),
+    ("1,760+",                              "Trading days"),
+    (f"2018–{_current_year}",               "Live data range"),
+    ("5",                                   "Live dashboards"),
+    ("10,000+",                             "MC simulations"),
 ]
 for col, (val, label) in zip(stat_cols, stats):
     with col:
