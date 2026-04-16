@@ -268,12 +268,12 @@ if st.button("Load Today's Momentum Signal", type="primary"):
                     textposition="outside",
                     textfont=dict(color="#F1F5F9", size=11),
                 ))
-                fig_top.update_layout(
+                fig_top.update_layout(**{
                     **CHART,
-                    height=340,
-                    title="Top 10 by Momentum Score (percentile rank)",
-                    yaxis=dict(**CHART["yaxis"], autorange="reversed"),
-                )
+                    "height": 340,
+                    "title": "Top 10 by Momentum Score (percentile rank)",
+                    "yaxis": dict(**CHART["yaxis"], autorange="reversed"),
+                })
                 fig_top.update_xaxes(range=[0.85, 1.02], title_text="Percentile rank")
                 st.plotly_chart(fig_top, width="stretch")
 
@@ -289,12 +289,12 @@ if st.button("Load Today's Momentum Signal", type="primary"):
                     textposition="outside",
                     textfont=dict(color="#F1F5F9", size=11),
                 ))
-                fig_bot.update_layout(
+                fig_bot.update_layout(**{
                     **CHART,
-                    height=340,
-                    title="Bottom 10 by Momentum Score (percentile rank)",
-                    yaxis=dict(**CHART["yaxis"], autorange="reversed"),
-                )
+                    "height": 340,
+                    "title": "Bottom 10 by Momentum Score (percentile rank)",
+                    "yaxis": dict(**CHART["yaxis"], autorange="reversed"),
+                })
                 fig_bot.update_xaxes(range=[0.0, 0.18], title_text="Percentile rank")
                 st.plotly_chart(fig_bot, width="stretch")
 
